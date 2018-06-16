@@ -32,6 +32,8 @@
 #define OPENAL_VERSION_STRING3(major, minor) #major "." #minor
 #define OPENAL_VERSION_STRING2(major, minor) OPENAL_VERSION_STRING3(major, minor)
 
+#define FIXME(x)
+
 /* !!! FIXME: make some decisions about VENDOR and RENDERER strings here */
 #define OPENAL_VERSION_STRING OPENAL_VERSION_STRING2(OPENAL_VERSION_MAJOR, OPENAL_VERSION_MINOR)
 #define OPENAL_VENDOR_STRING "Ryan C. Gordon"
@@ -153,17 +155,7 @@
 */
 
 
-#if 0
-#define FIXME(x)
-#else
-#define FIXME(x) { \
-    static int seen = 0; \
-    if (!seen) { \
-        seen = 1; \
-        fprintf(stderr, "FIXME: %s (%s@%s:%d)\n", x, __FUNCTION__, __FILE__, __LINE__); \
-    } \
-}
-#endif
+//#define FIXME(x)
 
 /* restrict is from C99, but __restrict works with both Visual Studio and GCC. */
 #if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901))
@@ -1035,7 +1027,7 @@ static void mix_buffer(const ALbuffer *buffer, const ALfloat * restrict panning,
 {
     const ALfloat left = panning[0];
     const ALfloat right = panning[1];
-    FIXME("currently expects output to be stereo");
+    //FIXME("currently expects output to be stereo");
     if ((left != 0.0f) || (right != 0.0f)) {  /* don't bother mixing in silence. */
         if (buffer->channels == 1) {
             #ifdef __SSE__
@@ -1083,7 +1075,7 @@ static ALboolean mix_source_buffer(ALCcontext *ctx, ALsource *src, BufferQueueIt
             while ( (((mixlen = SDL_AudioStreamAvailable(src->stream)) / bufferframesize) < framesneeded) && (src->offset < buffer->len) ) {
                 const int framesput = (buffer->len - src->offset) / bufferframesize;
                 const int bytesput = SDL_min(framesput, 1024) * bufferframesize;
-                FIXME("dynamically adjust frames here?");  /* we hardcode 1024 samples when opening the audio device, too. */
+                //FIXME("dynamically adjust frames here?");  /* we hardcode 1024 samples when opening the audio device, too. */
                 SDL_AudioStreamPut(src->stream, data, bytesput);
                 src->offset += bytesput;
                 data += bytesput / sizeof (float);
@@ -1115,7 +1107,7 @@ static ALboolean mix_source_buffer(ALCcontext *ctx, ALsource *src, BufferQueueIt
 
         processed = src->offset >= buffer->len;
         if (processed) {
-            FIXME("does the offset have to represent the whole queue or just the current buffer?");
+            //FIXME("does the offset have to represent the whole queue or just the current buffer?");
             src->offset = 0;
         }
     }
@@ -1141,7 +1133,7 @@ static ALCboolean mix_source_buffer_queue(ALCcontext *ctx, ALsource *src, Buffer
         SDL_assert((src->type == AL_STATIC) || (src->type == AL_STREAMING));
         if (src->type == AL_STREAMING) {  /* mark buffer processed. */
             SDL_assert(item == src->buffer_queue.head);
-            FIXME("bubble out all these NULL checks");  // these are only here because we check for looping/stopping in this loop, but we really shouldn't enter this loop at all if queue==NULL.
+            //FIXME("bubble out all these NULL checks");  // these are only here because we check for looping/stopping in this loop, but we really shouldn't enter this loop at all if queue==NULL.
             if (item != NULL) {
                 src->buffer_queue.head = next;
                 if (!next) {
@@ -1161,9 +1153,9 @@ static ALCboolean mix_source_buffer_queue(ALCcontext *ctx, ALsource *src, Buffer
 
         if (queue == NULL) {  /* nothing else to play? */
             if (src->looping) {
-                FIXME("looping is supposed to move to AL_INITIAL then immediately to AL_PLAYING, but I'm not sure what side effect this is meant to trigger");
+                //FIXME("looping is supposed to move to AL_INITIAL then immediately to AL_PLAYING, but I'm not sure what side effect this is meant to trigger");
                 if (src->type == AL_STREAMING) {
-                    FIXME("what does looping do with the AL_STREAMING state?");
+                    //FIXME("what does looping do with the AL_STREAMING state?");
                 }
             } else {
                 src->state = AL_STOPPED;
@@ -1237,7 +1229,7 @@ static __m128 xyzzy_sse(const __m128 a, const __m128 b)
 
 static ALfloat dotproduct_sse(const __m128 a, const __m128 b)
 {
-    FIXME("this can use _mm_hadd_ps in SSE3, or _mm_dp_ps in SSE4.1");
+    //FIXME("this can use _mm_hadd_ps in SSE3, or _mm_dp_ps in SSE4.1");
     const __m128 prod = _mm_mul_ps(a, b);
     const __m128 sum1 = _mm_add_ps(prod, _mm_shuffle_ps(prod, prod, _MM_SHUFFLE(1, 0, 3, 2)));
     const __m128 sum2 = _mm_add_ps(sum1, _mm_shuffle_ps(sum1, sum1, _MM_SHUFFLE(2, 2, 0, 0)));
@@ -1262,7 +1254,7 @@ static __m128 normalize_sse(const __m128 v)
 #ifdef __ARM_NEON__
 static float32x4_t xyzzy_neon(const float32x4_t a, const float32x4_t b)
 {
-    FIXME("need a better permute");
+    //FIXME("need a better permute");
     const float32x4_t shuf_a = { a[1], a[2], a[0], a[3] };
     const float32x4_t shuf_b = { b[1], b[2], b[0], b[3] };
     const float32x4_t v = vsubq_f32(vmulq_f32(a, shuf_b), vmulq_f32(b, shuf_a));
@@ -1311,7 +1303,7 @@ static ALfloat calculate_distance_attenuation(const ALCcontext *ctx, const ALsou
        linear model is being used with AL_REFERENCE_DISTANCE equal to
        AL_MAX_DISTANCE, then the gain equation will have a divide-by-zero
        error in it. In this case, there is no attenuation for that source." */
-    FIXME("check divisions by zero");
+    //FIXME("check divisions by zero");
 
     switch (ctx->distance_model) {
         case AL_INVERSE_DISTANCE_CLAMPED:
@@ -1423,7 +1415,7 @@ static void calculate_channel_gains(const ALCcontext *ctx, const ALsource *src, 
        angle and distance between listener and source is multiplied with
        source AL_GAIN." */
     if (src->cone_inner_angle < src->cone_outer_angle) {
-        FIXME("directional sources");
+        //FIXME("directional sources");
     }
 
     /* AL SPEC: "4. The effective gain computed this way is compared against
@@ -1721,13 +1713,16 @@ static void SDLCALL playback_device_callback(void *userdata, Uint8 *stream, int 
 
 ALCcontext *alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 {
-    ALCcontext *retval = NULL;
+	ALCcontext *retval = NULL;
     ALCsizei attrcount = 0;
     ALCint freq = 48000;
     ALCboolean sync = ALC_FALSE;
     ALCint refresh = 100;
     /* we don't care about ALC_MONO_SOURCES or ALC_STEREO_SOURCES as we have no hardware limitation. */
 
+	printf("mojoal alcCreatecontext()\n");
+	sleep(30);
+	
     if (!device) {
         set_alc_error(NULL, ALC_INVALID_DEVICE);
         return NULL;
@@ -1745,12 +1740,13 @@ ALCcontext *alcCreateContext(ALCdevice *device, const ALCint* attrlist)
                 case ALC_FREQUENCY: freq = attrlist[attrcount++]; break;
                 case ALC_REFRESH: refresh = attrlist[attrcount++]; break;
                 case ALC_SYNC: sync = (attrlist[attrcount++] ? ALC_TRUE : ALC_FALSE); break;
-                default: FIXME("fail for unknown attributes?"); break;
+                default: break;//FIXME("fail for unknown attributes?"); break;
             }
         }
     }
 
-    FIXME("use these variables at some point"); (void) refresh; (void) sync;
+    //FIXME("use these variables at some point"); 
+	(void) refresh; (void) sync;
 
     retval = (ALCcontext *) calloc_simd_aligned(sizeof (ALCcontext));
     if (!retval) {
@@ -1789,15 +1785,15 @@ ALCcontext *alcCreateContext(ALCdevice *device, const ALCint* attrlist)
         SDL_zero(desired);
         desired.freq = freq;
         desired.format = AUDIO_F32SYS;
-        desired.channels = 2;  FIXME("don't force channels?");
-        desired.samples = 1024;  FIXME("base this on refresh");
+        desired.channels = 2;  //FIXME("don't force channels?");
+        desired.samples = 1024;  //FIXME("base this on refresh");
         desired.callback = playback_device_callback;
         desired.userdata = device;
         device->sdldevice = SDL_OpenAudioDevice(devicename, 0, &desired, NULL, 0);
         if (!device->sdldevice) {
             SDL_free(retval->attributes);
             free_simd_aligned(retval);
-            FIXME("What error do you set for this?");
+            //FIXME("What error do you set for this?");
             return NULL;
         }
         device->channels = 2;
@@ -1832,7 +1828,7 @@ ALCcontext *alcCreateContext(ALCdevice *device, const ALCint* attrlist)
 ALCboolean alcMakeContextCurrent(ALCcontext *context)
 {
     SDL_AtomicSetPtr(&current_context, context);
-    FIXME("any reason this might return ALC_FALSE?");
+    //FIXME("any reason this might return ALC_FALSE?");
     return ALC_TRUE;
 }
 
@@ -1858,7 +1854,7 @@ void alcSuspendContext(ALCcontext *context)
     SDL_AtomicSet(&context->processing, 0);
 }
 
-static inline ALCcontext *get_current_context(void)
+static ALCcontext *get_current_context(void)
 {
     return (ALCcontext *) SDL_AtomicGetPtr(&current_context);
 }
@@ -1867,7 +1863,7 @@ void alcDestroyContext(ALCcontext *ctx)
 {
     int i;
 
-    FIXME("Should NULL context be an error?");
+    //FIXME("Should NULL context be an error?");
     if (!ctx) return;
 
     /* The spec says it's illegal to delete the current context. */
@@ -2078,11 +2074,11 @@ const ALCchar *alcGetString(ALCdevice *device, ALCenum param)
             return DEFAULT_CAPTURE_DEVICE;
 
         case ALC_DEVICE_SPECIFIER:
-            FIXME("should return NULL if device->iscapture?");
+            //FIXME("should return NULL if device->iscapture?");
             return device ? device->name : calculate_sdl_device_list(0);
 
         case ALC_CAPTURE_DEVICE_SPECIFIER:
-            FIXME("should return NULL if !device->iscapture?");
+            //FIXME("should return NULL if !device->iscapture?");
             return device ? device->name : calculate_sdl_device_list(1);
 
         case ALC_NO_ERROR: return "ALC_NO_ERROR";
@@ -2095,7 +2091,7 @@ const ALCchar *alcGetString(ALCdevice *device, ALCenum param)
         default: break;
     }
 
-    FIXME("other enums that should report as strings?");
+    //FIXME("other enums that should report as strings?");
     set_alc_error(device, ALC_INVALID_ENUM);
     return NULL;
 }
@@ -2139,7 +2135,7 @@ void alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *val
 
             ctx = get_current_context();
 
-            FIXME("wants 'current context of specified device', but there isn't a current context per-device...");
+            //FIXME("wants 'current context of specified device', but there isn't a current context per-device...");
             if ((!ctx) || (ctx->device != device)) {
                 *values = 0;
                 set_alc_error(device, ALC_INVALID_CONTEXT);
@@ -2216,7 +2212,7 @@ ALCdevice *alcCaptureOpenDevice(const ALCchar *devicename, ALCuint frequency, AL
     }
 
     desired.freq = frequency;
-    desired.samples = 1024;  FIXME("is this a reasonable value?");
+    desired.samples = 1024;  //FIXME("is this a reasonable value?");
     desired.callback = capture_device_callback;
     desired.userdata = device;
 
@@ -2288,7 +2284,7 @@ void alcCaptureStart(ALCdevice *device)
 {
     if (device && device->iscapture) {
         /* alcCaptureStart() drops any previously-buffered data. */
-        FIXME("does this clear the ring buffer if the device is already started?");
+        //FIXME("does this clear the ring buffer if the device is already started?");
         device->capture.ring.read = 0;
         device->capture.ring.write = 0;
         device->capture.ring.used = 0;
@@ -2315,7 +2311,7 @@ void alcCaptureSamples(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
     SDL_LockAudioDevice(device->sdldevice);
     if (requested_bytes > device->capture.ring.used) {
         SDL_UnlockAudioDevice(device->sdldevice);
-        FIXME("set error state?");
+        //FIXME("set error state?");
         return;  /* this is an error state, according to the spec. */
     }
 
@@ -2337,7 +2333,7 @@ static void set_al_error(ALCcontext *ctx, const ALenum error)
     }
 }
 
-static inline ALboolean is_source_valid(ALCcontext *ctx, const ALuint name)
+static ALboolean is_source_valid(ALCcontext *ctx, const ALuint name)
 {
     return (ctx && name && (name < OPENAL_MAX_SOURCES) && (SDL_AtomicGet(&ctx->sources[name-1].allocated) == 1)) ? AL_TRUE : AL_FALSE;
 }
@@ -2493,7 +2489,7 @@ const ALchar *alGetString(ALenum param)
         default: break;
     }
 
-    FIXME("other enums that should report as strings?");
+    //FIXME("other enums that should report as strings?");
     set_al_error(get_current_context(), AL_INVALID_ENUM);
 
     return NULL;
@@ -2613,7 +2609,7 @@ ALboolean alIsExtensionPresent(const ALchar *extname)
 void *alGetProcAddress(const ALchar *funcname)
 {
     ALCcontext *ctx = get_current_context();
-    FIXME("fail if ctx == NULL?");
+    //FIXME("fail if ctx == NULL?");
     if (!funcname) {
         set_al_error(ctx, AL_INVALID_VALUE);
         return NULL;
@@ -2702,7 +2698,7 @@ void *alGetProcAddress(const ALchar *funcname)
 ALenum alGetEnumValue(const ALchar *enumname)
 {
     ALCcontext *ctx = get_current_context();
-    FIXME("fail if ctx == NULL?");
+    //FIXME("fail if ctx == NULL?");
     if (!enumname) {
         set_al_error(ctx, AL_INVALID_VALUE);
         return AL_NONE;
@@ -3110,7 +3106,7 @@ void alDeleteSources(ALsizei n, const ALuint *names)
     for (i = 0; i < n; i++) {
         const ALuint name = names[i];
         if (name == 0) {
-            /* ignore it. */ FIXME("Spec says alDeleteBuffers() can have a zero name as a legal no-op, but this text isn't included in alDeleteSources...");
+            /* ignore it. */ //FIXME("Spec says alDeleteBuffers() can have a zero name as a legal no-op, but this text isn't included in alDeleteSources...");
         } else if (!is_source_valid(ctx, name)) {
             /* "If one or more of the specified names is not valid, an AL_INVALID_NAME error will be recorded, and no objects will be deleted." */
             set_al_error(ctx, AL_INVALID_NAME);
@@ -3185,7 +3181,7 @@ void alSourcefv(ALuint name, ALenum param, const ALfloat *values)
     ALsource *src = get_source(ctx, name);
     if (!src) return;
 
-    FIXME("this needs a lock");  // ...or atomic operations.
+    //FIXME("this needs a lock");  // ...or atomic operations.
 
     switch (param) {
         case AL_GAIN: src->gain = *values; break;
@@ -3205,7 +3201,7 @@ void alSourcefv(ALuint name, ALenum param, const ALfloat *values)
         case AL_SEC_OFFSET:
         case AL_SAMPLE_OFFSET:
         case AL_BYTE_OFFSET:
-            FIXME("offsets");
+            //FIXME("offsets");
             break;
 
         default: set_al_error(ctx, AL_INVALID_ENUM); return;
@@ -3263,14 +3259,14 @@ static void set_source_static_buffer(ALCcontext *ctx, ALsource *src, const ALuin
             SDL_AudioStream *stream = NULL;
             SDL_AudioStream *freestream = NULL;
             /* We only use the stream for resampling, not for channel conversion. */
-            FIXME("keep the existing stream if formats match?");
+            //FIXME("keep the existing stream if formats match?");
             if (buffer && (ctx->device->frequency != buffer->frequency)) {
                 stream = SDL_NewAudioStream(AUDIO_F32SYS, buffer->channels, buffer->frequency, AUDIO_F32SYS, buffer->channels, ctx->device->frequency);
                 if (!stream) {
                     set_al_error(ctx, AL_OUT_OF_MEMORY);
                     return;
                 }
-                FIXME("need a way to prealloc space in the stream, so the mixer doesn't have to malloc");
+                //FIXME("need a way to prealloc space in the stream, so the mixer doesn't have to malloc");
             }
 
             SDL_AtomicLock(&src->lock);
@@ -3311,7 +3307,7 @@ void alSourceiv(ALuint name, ALenum param, const ALint *values)
     ALsource *src = get_source(ctx, name);
     if (!src) return;
 
-    FIXME("this needs a lock");  // ...or atomic operations.
+    //FIXME("this needs a lock");  // ...or atomic operations.
 
     switch (param) {
         case AL_BUFFER: set_source_static_buffer(ctx, src, (ALuint) *values); break;
@@ -3332,7 +3328,7 @@ void alSourceiv(ALuint name, ALenum param, const ALint *values)
         case AL_SEC_OFFSET:
         case AL_SAMPLE_OFFSET:
         case AL_BYTE_OFFSET:
-            FIXME("offsets");
+            //FIXME("offsets");
             break;
 
         default: set_al_error(ctx, AL_INVALID_ENUM); return;
@@ -3390,7 +3386,7 @@ void alGetSourcefv(ALuint name, ALenum param, ALfloat *values)
     ALsource *src = get_source(ctx, name);
     if (!src) return;
 
-    FIXME("this needs a lock");  // ...or atomic operations.
+    //FIXME("this needs a lock");  // ...or atomic operations.
 
     switch (param) {
         case AL_GAIN: *values = src->gain; return;
@@ -3410,7 +3406,7 @@ void alGetSourcefv(ALuint name, ALenum param, ALfloat *values)
         case AL_SEC_OFFSET:
         case AL_SAMPLE_OFFSET:
         case AL_BYTE_OFFSET:
-            FIXME("offsets");
+            //FIXME("offsets");
             break;
 
         default: break;
@@ -3468,7 +3464,7 @@ void alGetSourceiv(ALuint name, ALenum param, ALint *values)
     ALsource *src = get_source(ctx, name);
     if (!src) return;
 
-    FIXME("this needs a lock");  // ...or atomic operations.
+    //FIXME("this needs a lock");  // ...or atomic operations.
 
     switch (param) {
         case AL_SOURCE_STATE: *values = (ALint) src->state; return;
@@ -3492,7 +3488,7 @@ void alGetSourceiv(ALuint name, ALenum param, ALint *values)
         case AL_SEC_OFFSET:
         case AL_SAMPLE_OFFSET:
         case AL_BYTE_OFFSET:
-            FIXME("offsets");
+            //FIXME("offsets");
             break; /*return;*/
 
         default: break;
@@ -3509,7 +3505,7 @@ static void source_play(ALCcontext *ctx, const ALuint name)
         int oldval;
         int bit;
 
-        FIXME("this could be lock free if we maintain a queue of playing sources");  /* we do this now, but need to check other side effects */
+        //FIXME("this could be lock free if we maintain a queue of playing sources");  /* we do this now, but need to check other side effects */
         SDL_AtomicLock(&src->lock);
         if (src->offset_latched) {
             src->offset_latched = AL_FALSE;
@@ -3701,7 +3697,7 @@ void alSourceQueueBuffers(ALuint name, ALsizei nb, const ALuint *bufnames)
                 set_al_error(ctx, AL_OUT_OF_MEMORY);
                 failed = AL_TRUE;
             }
-            FIXME("need a way to prealloc space in the stream, so the mixer doesn't have to malloc");
+            //FIXME("need a way to prealloc space in the stream, so the mixer doesn't have to malloc");
         }
     }
 
@@ -3727,7 +3723,7 @@ void alSourceQueueBuffers(ALuint name, ALsizei nb, const ALuint *bufnames)
         return;
     }
 
-    FIXME("this needs to be set way sooner");
+    //FIXME("this needs to be set way sooner");
     SDL_AtomicLock(&src->lock);
     src->type = AL_STREAMING;
 
@@ -3849,7 +3845,7 @@ void alGenBuffers(ALsizei n, ALuint *names)
         return;
     }
 
-    FIXME("add an indexing array instead of walking the buffer blocks for lookup?");  // thread safety, blah blah blah
+    //FIXME("add an indexing array instead of walking the buffer blocks for lookup?");  // thread safety, blah blah blah
 
     block = endblock = &ctx->device->playback.buffer_blocks;  /* the first one is a static piece of the context */
     while (found < n) {
@@ -3941,7 +3937,7 @@ void alDeleteBuffers(ALsizei n, const ALuint *names)
         const ALuint name = names[i];
         if (name != 0) {
             ALbuffer *buffer = get_buffer(ctx, name);
-            SDL_assert(buffer != NULL);
+            //SDL_assert(buffer != NULL);
             void *data = (void *) buffer->data;
             if (!SDL_AtomicCAS(&buffer->allocated, 1, 0)) {
                 /* uh-oh!! */
@@ -4114,7 +4110,7 @@ void alGetBufferiv(ALuint name, ALenum param, ALint *values)
     ALbuffer *buffer = get_buffer(ctx, name);
     if (!buffer) return;
 
-    FIXME("this needs a lock");  // ...or atomic operations.
+    //FIXME("this needs a lock");  // ...or atomic operations.
     switch (param) {
         case AL_FREQUENCY: *values = (ALint) buffer->frequency; return;
         case AL_SIZE: *values = (ALint) buffer->len; return;
