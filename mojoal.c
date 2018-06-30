@@ -1050,6 +1050,8 @@ static void mix_buffer(const ALbuffer *buffer, const ALfloat * restrict panning,
             {
             #if NEED_SCALAR_FALLBACK
             mix_float32_c2_scalar(panning, data, stream, mixframes);
+            #else
+            SDL_assert(!"uhoh, we didn't compile in enough mixers!");
             #endif
             }
         }
@@ -1720,9 +1722,6 @@ ALCcontext *alcCreateContext(ALCdevice *device, const ALCint* attrlist)
     ALCint refresh = 100;
     /* we don't care about ALC_MONO_SOURCES or ALC_STEREO_SOURCES as we have no hardware limitation. */
 
-	printf("mojoal alcCreatecontext()\n");
-	sleep(30);
-	
     if (!device) {
         set_alc_error(NULL, ALC_INVALID_DEVICE);
         return NULL;
