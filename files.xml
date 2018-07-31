@@ -11,8 +11,8 @@
 		
 		<compilerflag value="-I${NATIVE_TOOLKIT_PATH}/mojoal/" />
 		<compilerflag value="-DAL_LIBTYPE_STATIC" if="native_toolkit_mojoal_static" />
-		<compilerflag value="-D__ARM_NEON__" if="switch || ios" />
-		<compilerflag value="-DNEED_SCALAR_FALLBACK" if="android" />
+		<compilerflag value="-D__ARM_NEON__" if="switch || ios"/>
+		<compilerflag value="-DNEED_SCALAR_FALLBACK" if="android"/>
 		
 		<file name="${NATIVE_TOOLKIT_PATH}/mojoal/mojoal.c" />
 		
